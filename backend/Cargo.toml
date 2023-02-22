@@ -7,9 +7,9 @@ edition = "2021"
 
 [dependencies]
 frontend = { path = "../frontend" }
-salvo = { version = "0.25.1", features = ["serve-static"] }
-tokio = { version = "1", features = ["macros"] }
-sycamore = { version = "0.8.0-beta.7", features = ["ssr","web"] }
+salvo = { version = "0.37.9", features = ["serve-static"] }
+tokio = { version = "1.25.0", features = ["macros"] }
+sycamore = { version = "0.8.2", features = ["ssr","web"] }
 bonsaidb = { version = "0.4.1", features = ["local"] }
-chrono = "0.4.19"
-serde = "1.0.137"
+chrono = { version = "0.4.23", features = ["serde"] }
+serde = "1.0.152"

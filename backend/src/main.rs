@@ -10,7 +10,7 @@ use bonsaidb::{
     },
 };
 use serde::{Deserialize, Serialize};
-use salvo::{prelude::*, extra::serve_static::DirHandler};
+use salvo::{prelude::*, serve_static::StaticDir};
 use sycamore::prelude::*;
 use tokio::fs;
 
@@ -21,7 +21,7 @@ struct Message {
     pub file_path: String,
 }
 
-#[fn_handler]
+#[handler]
 async fn webapp(res: &mut Response, req: &mut Request) {
     let index_html = String::from_utf8(fs::read("./app/index.html").await.unwrap()).unwrap();
     let app_path = req.param::<String>("**app_path");
@@ -37,7 +37,7 @@ async fn webapp(res: &mut Response, req: &mut Request) {
     res.render(Text::Html(index_html));
 }
 
-#[fn_handler]
+#[handler]
 async fn upload(req: &mut Request, res: &mut Response) {
     let files = req.files("files").await;
     if let Some(files) = files {
@@ -69,7 +69,7 @@ async fn main() {
     let router = Router::new()
         .push(
             Router::with_path("/static/<**path>")
-                .get(DirHandler::new(
+                .get(StaticDir::new(
                     vec!["./app/static"])))
         .push(
             Router::with_path("/")
