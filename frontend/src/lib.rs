@@ -7,8 +7,8 @@ mod pages;
 enum AppRoutes {
     #[to("/")]
     Index,
-    #[to("/about")]
-    About,
+    #[to("/list")]
+    List,
     #[not_found]
     NotFound,
 }
@@ -21,10 +21,8 @@ fn switch<'a, G: Html>(cx: Scope<'a>, route: &'a ReadSignal<AppRoutes>) -> View<
                 AppRoutes::Index => view! { cx,
                     pages::index::Index()
                 },
-                AppRoutes::About => view! { cx,
-                    h1{
-                        "About"
-                    }
+                AppRoutes::List => view! { cx,
+                    pages::list::List()
                 },
                 AppRoutes::NotFound => view! { cx,
                     h1{

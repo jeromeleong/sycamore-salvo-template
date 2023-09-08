@@ -3,22 +3,46 @@ use std::path::Path;
 use chrono::{Local,NaiveDateTime};
 
 use bonsaidb::{
-    core::schema::{Collection, SerializedCollection},
+    core::{
+        document::{CollectionDocument, Emit},
+        schema::{
+            view::CollectionViewSchema, Collection, SerializedCollection,
+             View, ViewMapResult,
+        },
+        connection::Connection
+    },
     local::{
         config::{Builder, StorageConfiguration},
         Database,
     },
 };
-use serde::{Deserialize, Serialize};
+use serde::*;
 use salvo::{prelude::*, serve_static::StaticDir};
 use sycamore::prelude::*;
 use tokio::fs;
 
+
 #[derive(Debug, Serialize, Deserialize, Collection)]
-#[collection(name = "messages")]
+#[collection(name = "messages", views = [MessageList])]
 struct Message {
     pub timestamp: NaiveDateTime,
     pub file_path: String,
+}
+
+
+#[derive(Debug, Clone, View)]
+#[view(collection = Message, key = u64, name = "files-list")]
+struct MessageList;
+
+impl CollectionViewSchema for MessageList {
+    type View = Self;
+
+    fn map(&self, document: CollectionDocument<Message>) -> ViewMapResult<Self::View> {
+        document
+            .header
+            .emit_key(document.header.id)
+    }
+
 }
 
 #[handler]
@@ -35,6 +59,23 @@ async fn webapp(res: &mut Response, req: &mut Request) {
     let index_html = index_html.replace("%sycamore.body", &rendered);
 
     res.render(Text::Html(index_html));
+}
+
+#[handler]
+async fn list(res: &mut Response) {
+    let db = Database::open::<Message>(StorageConfiguration::new("./db")).unwrap();
+    let rust_posts = db.view::<MessageList>().ascending().query_with_collection_docs().unwrap();
+    let mut msgs = Vec::with_capacity(rust_posts.len());
+    
+    if rust_posts.len() >= 1 {
+        for mapping in &rust_posts {
+            msgs.push(format!("{} : {:?} at {}", &mapping.document.header.id, &mapping.document.contents.file_path, &mapping.document.contents.timestamp.format("%Y-%m-%d %H:%M:%S")));
+        }
+        res.render(Text::Plain(format!("All files uploaded:\n\n{}", msgs.join("\n"))));
+    } else {
+        msgs.push("No File found !".to_string());
+        res.render(Text::Plain(format!("{}", msgs.join("\n"))));
+    }
 }
 
 #[handler]
@@ -72,12 +113,19 @@ async fn main() {
                 .get(StaticDir::new(
                     vec!["./app/static"])))
         .push(
-            Router::with_path("/")
+            Router::with_path("/assets/<**path>")
+                .get(StaticDir::new(
+                    vec!["./app/assets"])))
+        .push(
+            Router::with_path("/api/list")
+                .get(list))
+        .push(
+            Router::with_path("/upload")
                 .post(upload))
         .push(
             Router::with_path("/<**app_path>")
                 .get(webapp));
 
-    let listener = TcpListener::bind("127.0.0.1:8080");
+    let listener = TcpListener::bind("localhost:8080");
     Server::new(listener).serve(router).await;
 }

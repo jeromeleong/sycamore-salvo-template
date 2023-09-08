@@ -4,10 +4,23 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-sycamore = { version = "0.8.2", features = ["hydrate" , "suspense"] }
+sycamore = { version = "0.8.2", features = ["hydrate" , "suspense", "serde" ] }
 sycamore-router = "0.8.0"
+reqwest = { version = "0.11.20", features = ["json","multipart","blocking"] }
+wasm-bindgen = { version = "0.2.81", features = ["serde-serialize"] }
 console_error_panic_hook = "0.1.7"
 console_log = "0.2.0"
 log = "0.4.17"
-web-sys = "0.3.61"
 
+[dependencies.web-sys]
+version = "0.3.57"
+features = [
+    "HtmlInputElement",
+    "HtmlFormElement",
+    "FileList",
+    "FileReader",
+    'Request',
+    'RequestInit',
+    'RequestMode',
+    'Response',
+]

@@ -6,7 +6,7 @@ pub fn Navbor<G: Html>(cx: BoundedScope) -> View<G> {
         nav{
             a(href="/", rel="external") { "Home" }
             span{ " | " }
-            a(href="/about", rel="external") { "About" }
+            a(href="/list", rel="external") { "List" }
         }
     }
 }
